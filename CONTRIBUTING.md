@@ -57,7 +57,8 @@ git --version
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/opensecflow-website.git
-cd opensecflow-website
+cd OpenSecFlow-Web
+
 ```
 
 3. **Add the upstream repository** (to sync with the main project):
@@ -116,16 +117,17 @@ git pull upstream main
 2. **Create a new feature branch**:
 
 ```bash
-git checkout -b feature/your-feature-name
+git checkout -b feat/your-feature-name
 ```
 
 **Branch Naming Conventions**:
-- `feature/` - for new features
+- `feat/` - for new features
 - `fix/` - for bug fixes
 - `docs/` - for documentation changes
 - `refactor/` - for code refactoring
 - `style/` - for formatting/style changes
 - `perf/` - for performance improvements
+- `test/` for testing purposes
 
 Examples:
 - `feature/add-search-functionality`
