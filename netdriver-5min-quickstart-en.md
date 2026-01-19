@@ -1,6 +1,6 @@
-# NetDriver Agent 5-Minute Quickstart: Making Network Automation as Simple as Calling an API
+# NetDriver Agent 5 Minute Quickstart: Making Network Automation as Simple as Calling an API
 
-> Launch NetDriver with Docker and complete your first network device configuration in 5 minutes via HTTP API! No need to write SSH connection code, no need to handle complex exceptions - everything is as simple as calling a REST API.
+> Launching Netdriver with Docker to Automate your Network is a simple process.No need for SSH connection code or to write complex exceptions, NetDriver will make it as simple as calling a Rest API.
 
 ---
 
