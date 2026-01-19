@@ -1,19 +1,32 @@
 ---
+import { getCollection } from 'astro:content';
 import MainLayout from '../../../layouts/MainLayout.astro';
 import SchemaLD from '../../../components/SchemaLD.astro';
 import BreadcrumbList from '../../../components/schemas/BreadcrumbList.astro';
-import { marked } from 'marked';
-import { readFileSync } from 'fs';
-import { join } from 'path';
-import 'prismjs/themes/prism-tomorrow.css';
+import { extractTitle, extractSummary } from '../../../utils/tutorialParser';
 
 const siteURL = Astro.site?.toString() || 'https://opensecflow.io';
 const tutorialURL = new URL('/tutorial/netdriver', siteURL).toString();
 
-// Read and parse markdown file
-const markdownPath = join(process.cwd(), 'netdriver-5min-quickstart-en.md');
-const markdownContent = readFileSync(markdownPath, 'utf-8');
-const htmlContent = marked.parse(markdownContent);
+// Get all tutorials from the netdriver category
+const allTutorials = await getCollection('tutorials', ({ data, id }) => {
+  return id.startsWith('netdriver/');
+});
+
+// Parse tutorials to extract title and summary
+const tutorials = allTutorials.map((tutorial) => {
+  const title = extractTitle(tutorial.body);
+  const summary = extractSummary(tutorial.body);
+  const slug = tutorial.id.replace('netdriver/', '');
+  
+  return {
+    ...tutorial,
+    title,
+    summary,
+    slug,
+    url: `/tutorial/netdriver/${slug}`,
+  };
+});
 
 // Breadcrumb items
 const breadcrumbItems = [
@@ -22,108 +35,38 @@ const breadcrumbItems = [
   { name: 'NetDriver', url: '/tutorial/netdriver' },
 ];
 
-// HowTo Schema for the tutorial
-const howToSchema = {
+// CollectionPage Schema for tutorial listing
+const collectionPageSchema = {
   '@context': 'https://schema.org',
-  '@type': 'HowTo',
-  name: 'NetDriver Agent 5-Minute Quickstart: Making Network Automation as Simple as Calling an API',
-  description: 'Launch NetDriver with Docker and complete your first network device configuration in 5 minutes via HTTP API! No need to write SSH connection code, no need to handle complex exceptions - everything is as simple as calling a REST API.',
-  image: new URL('/osfLogoFull.svg', siteURL).toString(),
-  estimatedCost: {
-    '@type': 'MonetaryAmount',
-    currency: 'USD',
-    value: '0',
+  '@type': 'CollectionPage',
+  name: 'NetDriver Tutorials',
+  description: 'Learn NetDriver with step-by-step tutorials and guides',
+  url: tutorialURL,
+  mainEntity: {
+    '@type': 'ItemList',
+    numberOfItems: tutorials.length,
+    itemListElement: tutorials.map((tutorial, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      item: {
+        '@type': 'HowTo',
+        '@id': new URL(tutorial.url, siteURL).toString(),
+        name: tutorial.title,
+        description: tutorial.summary,
+      },
+    })),
   },
-  totalTime: 'PT5M',
-  tool: [
-    {
-      '@type': 'HowToTool',
-      name: 'Docker',
-    },
-    {
-      '@type': 'HowToTool',
-      name: 'curl or HTTP client',
-    },
-    {
-      '@type': 'HowToTool',
-      name: 'Network device with SSH access',
-    },
-  ],
-  step: [
-    {
-      '@type': 'HowToStep',
-      position: 1,
-      name: 'Launch NetDriver Agent',
-      text: 'Create configuration directory, download configuration file, and launch NetDriver Agent using Docker. Verify successful startup by checking container status and calling the health API endpoint.',
-      url: `${tutorialURL}#step-1-launch-netdriver-agent-1-minute`,
-    },
-    {
-      '@type': 'HowToStep',
-      position: 2,
-      name: 'Test Device Connection',
-      text: 'Test SSH connections to network devices (Paloalto PA and Juniper SRX) via RESTful API using the /api/v1/connect endpoint. Verify connection parameters and understand the response format.',
-      url: `${tutorialURL}#step-2-test-device-connection-1-minute`,
-    },
-    {
-      '@type': 'HowToStep',
-      position: 3,
-      name: 'Execute Your First Command',
-      text: 'Execute commands on network devices using the /api/v1/cmd endpoint. Learn to execute raw commands, use TextFSM templates for structured data parsing, and automatically switch between multiple execution modes (login/enable/config).',
-      url: `${tutorialURL}#step-3-execute-your-first-command-2-minutes`,
-    },
-  ],
-};
-
-// FAQ Schema for tutorial
-const faqSchema = {
-  '@context': 'https://schema.org',
-  '@type': 'FAQPage',
-  mainEntity: [
-    {
-      '@type': 'Question',
-      name: 'What is NetDriver Agent?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'NetDriver Agent is a FastAPI-based REST API service that provides device connectivity testing, command execution, session management, and command queue functionality for network automation.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'How do I install NetDriver Agent?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'You can install NetDriver Agent via PyPI using "pip install netdriver-agent" or via Docker. First, create a configuration directory and download the default configuration file from GitHub.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'What are the key features of NetDriver Agent?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Key features include HTTP RESTful API for easy integration, session persistence for improved efficiency, command queue for sequential execution, flexible configuration options, and high performance with AsyncSSH-based architecture.',
-      },
-    },
-    {
-      '@type': 'Question',
-      name: 'How do I execute commands on network devices?',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: 'Use the POST /api/v1/cmd endpoint with device connection details and commands. You can execute raw commands or use textfsm templates for structured output parsing.',
-      },
-    },
-  ],
 };
 
 ---
 
 <MainLayout
-  title="NetDriver Agent 5-Minute Quickstart - OpenSecFlow"
-  description="Launch NetDriver with Docker and complete your first network device configuration in 5 minutes via HTTP API! No need to write SSH connection code, no need to handle complex exceptions - everything is as simple as calling a REST API."
+  title="NetDriver Tutorials - OpenSecFlow"
+  description="Learn NetDriver with step-by-step tutorials and guides. Master network automation with REST APIs, session management, and command execution."
   keywords={['netdriver', 'tutorial', 'network automation', 'rest api', 'ssh', 'netdevops', 'quickstart', 'docker']}
 >
   <BreadcrumbList items={breadcrumbItems} siteURL={siteURL} />
-  <SchemaLD schema={howToSchema} />
-  <SchemaLD schema={faqSchema} />
+  <SchemaLD schema={collectionPageSchema} />
   <!-- Animated Background -->
   <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
     <div class="absolute inset-0 bg-gradient-to-br from-slate-blue-50 via-white to-sky-50"></div>
@@ -155,10 +98,46 @@ const faqSchema = {
   </div>
 
   <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div class="text-center mb-12">
+      <h1 class="text-4xl font-bold text-navy-800 mb-4">
+        NetDriver Tutorials
+      </h1>
+      <p class="text-lg text-slate-blue-600 max-w-2xl mx-auto">
+        Step-by-step guides to master network automation with NetDriver
+      </p>
+    </div>
 
-    <article class="bg-white rounded-xl shadow-lg border-2 border-slate-blue-200 p-8 md:p-12">
-      <div class="prose prose-slate prose-lg max-w-none prose-headings:text-navy-800 prose-headings:font-semibold prose-h3:text-2xl prose-h4:text-xl prose-p:text-slate-blue-700 prose-strong:text-navy-800 prose-code:text-sky-600 prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-blockquote:border-sky-500 prose-blockquote:bg-sky-50 prose-blockquote:text-slate-blue-700 prose-a:text-sky-600 prose-a:no-underline hover:prose-a:underline" set:html={htmlContent} />
-    </article>
+    {tutorials.length === 0 ? (
+      <div class="text-center py-12">
+        <p class="text-slate-blue-600">
+          No tutorials available yet. Check back soon!
+        </p>
+      </div>
+    ) : (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        {tutorials.map((tutorial) => (
+          <a
+            href={tutorial.url}
+            class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border-2 border-slate-blue-200 hover:border-sky-400 transform hover:-translate-y-1 group"
+          >
+            <div class="p-6">
+              <h2 class="text-xl font-semibold text-navy-800 mb-2 group-hover:text-sky-500 transition-colors">
+                {tutorial.title}
+              </h2>
+              <p class="text-slate-blue-600 text-sm mb-4 line-clamp-3">
+                {tutorial.summary}
+              </p>
+              <div class="inline-flex items-center gap-1 text-xs text-sky-600 font-medium">
+                <span>Read Tutorial</span>
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                </svg>
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    )}
   </div>
 </MainLayout>
 
@@ -244,34 +223,4 @@ const faqSchema = {
     transition: transform 0.2s ease;
   }
 
-  .toc-list a:hover .toc-icon,
-  .toc-sublist a:hover .toc-subicon {
-    transform: scale(1.15);
-  }
 </style>
-
-<script>
-  import Prism from 'prismjs';
-  import 'prismjs/components/prism-bash';
-  import 'prismjs/components/prism-json';
-  import 'prismjs/components/prism-yaml';
-  
-  function highlightCode() {
-    // Handle TextFSM code blocks (treat as text if no language support)
-    document.querySelectorAll('pre code[class*="language-textfsm"], pre code[class*="language-TextFSM"]').forEach((el) => {
-      el.className = 'language-text';
-    });
-    
-    Prism.highlightAll();
-  }
-  
-  // Highlight on DOM ready
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', highlightCode);
-  } else {
-    highlightCode();
-  }
-  
-  // Highlight after Astro view transitions
-  document.addEventListener('astro:page-load', highlightCode);
-</script>

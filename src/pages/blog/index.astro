@@ -6,6 +6,30 @@ import SchemaLD from '../../components/SchemaLD.astro';
 
 const blogPosts = await db.select().from(BlogPosts).orderBy(desc(BlogPosts.pubDate));
 
+// Static external articles (not stored in database)
+const externalArticles = [
+  {
+    slug: 'netdriver-the-new-netmiko-medium',
+    title: 'NetDriver, the New Netmiko: A Modern Approach to Network Automation',
+    description: 'Discover how NetDriver revolutionizes network automation with REST API, persistent sessions, command queuing, and async architecture - addressing Netmiko\'s limitations while building on its strengths.',
+    pubDate: new Date('2025-11-06'),
+    updatedDate: null,
+    heroImage: null,
+    tags: ['netdriver', 'netmiko', 'network-automation', 'ssh', 'rest-api', 'asyncssh', 'scaling-automation'],
+    body: '',
+    externalLink: 'https://medium.com/@skycloudinet/netdriver-the-new-netmiko-bbbad90302db',
+    isExternalOnly: true, // Flag to indicate this links directly to external source
+  },
+];
+
+// Merge database posts with external articles and sort by date
+type BlogPost = typeof blogPosts[0] | typeof externalArticles[0];
+const allPosts: BlogPost[] = [...blogPosts, ...externalArticles].sort((a, b) => {
+  const dateA = a.pubDate instanceof Date ? a.pubDate : new Date(a.pubDate);
+  const dateB = b.pubDate instanceof Date ? b.pubDate : new Date(b.pubDate);
+  return dateB.getTime() - dateA.getTime();
+});
+
 const siteURL = Astro.site || 'https://opensecflow.io';
 
 // CollectionPage Schema for blog listing
@@ -17,18 +41,20 @@ const collectionPageSchema = {
   url: new URL('/blog', siteURL).toString(),
   mainEntity: {
     '@type': 'ItemList',
-    numberOfItems: blogPosts.length,
-    itemListElement: blogPosts.map((post, index) => ({
+    numberOfItems: allPosts.length,
+    itemListElement: allPosts.map((post, index) => ({
       '@type': 'ListItem',
       position: index + 1,
       item: {
         '@type': 'TechArticle',
-        '@id': new URL(`/blog/${post.slug}`, siteURL).toString(),
+        '@id': ('isExternalOnly' in post && (post as BlogPost & { isExternalOnly?: boolean }).isExternalOnly && 'externalLink' in post && (post as BlogPost & { externalLink?: string }).externalLink)
+          ? (post as BlogPost & { externalLink?: string }).externalLink!
+          : new URL(`/blog/${post.slug}`, siteURL).toString(),
         headline: post.title,
         description: post.description,
-        datePublished: post.pubDate.toISOString(),
+        datePublished: (post.pubDate instanceof Date ? post.pubDate : new Date(post.pubDate)).toISOString(),
         ...(post.updatedDate && {
-          dateModified: post.updatedDate.toISOString(),
+          dateModified: (post.updatedDate instanceof Date ? post.updatedDate : new Date(post.updatedDate)).toISOString(),
         }),
         ...(post.heroImage && {
           image: new URL(post.heroImage, siteURL).toString(),
@@ -84,7 +110,7 @@ const collectionPageSchema = {
       </p>
     </div>
 
-    {blogPosts.length === 0 ? (
+    {allPosts.length === 0 ? (
       <div class="text-center py-12">
         <p class="text-slate-blue-600">
           No blog posts yet. Check back soon!
@@ -92,61 +118,77 @@ const collectionPageSchema = {
       </div>
     ) : (
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {blogPosts.map((post) => (
-          <a
-            href={`/blog/${post.slug}`}
-            class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border-2 border-slate-blue-200 hover:border-sky-400 transform hover:-translate-y-1 group"
-          >
-            {post.heroImage && (
-              <div class="aspect-video bg-slate-blue-100 overflow-hidden">
-                <img
-                  src={post.heroImage}
-                  alt={post.title}
-                  class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  loading="lazy"
-                  width="400"
-                  height="225"
-                />
-              </div>
-            )}
-            <div class="p-6">
-              <h2 class="text-xl font-semibold text-navy-800 mb-2 group-hover:text-sky-500 transition-colors">
-                {post.title}
-              </h2>
-              <p class="text-slate-blue-600 text-sm mb-4 line-clamp-2">
-                {post.description}
-              </p>
-              <div class="flex items-center justify-between text-sm text-slate-blue-500 mb-3">
-                <time datetime={post.pubDate.toISOString()}>
-                  {post.pubDate.toLocaleDateString('en-US', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric',
-                  })}
-                </time>
-                {post.tags && Array.isArray(post.tags) && post.tags.length > 0 && (
-                  <span class="text-sky-500 font-medium">
-                    {post.tags[0]}
-                  </span>
+        {allPosts.map((post) => {
+          const postDate = post.pubDate instanceof Date ? post.pubDate : new Date(post.pubDate);
+          const postWithExtras = post as BlogPost & { isExternalOnly?: boolean; externalLink?: string };
+          const isExternalOnly = postWithExtras.isExternalOnly && postWithExtras.externalLink;
+          const cardHref: string = isExternalOnly && postWithExtras.externalLink ? postWithExtras.externalLink : `/blog/${post.slug}`;
+          
+          return (
+            <a
+              href={cardHref}
+              target={isExternalOnly ? '_blank' : undefined}
+              rel={isExternalOnly ? 'noopener noreferrer' : undefined}
+              class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border-2 border-slate-blue-200 hover:border-sky-400 transform hover:-translate-y-1 group"
+            >
+              {post.heroImage && (
+                <div class="aspect-video bg-slate-blue-100 overflow-hidden">
+                  <img
+                    src={post.heroImage}
+                    alt={post.title}
+                    class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
+                    width="400"
+                    height="225"
+                  />
+                </div>
+              )}
+              <div class="p-6">
+                <h2 class="text-xl font-semibold text-navy-800 mb-2 group-hover:text-sky-500 transition-colors">
+                  {post.title}
+                </h2>
+                <p class="text-slate-blue-600 text-sm mb-4 line-clamp-2">
+                  {post.description}
+                </p>
+                <div class="flex items-center justify-between text-sm text-slate-blue-500 mb-3">
+                  <time datetime={postDate.toISOString()}>
+                    {postDate.toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </time>
+                  {post.tags && Array.isArray(post.tags) && post.tags.length > 0 && (
+                    <span class="text-sky-500 font-medium">
+                      {post.tags[0]}
+                    </span>
+                  )}
+                </div>
+                {isExternalOnly ? (
+                  <div class="inline-flex items-center gap-1 text-xs text-sky-600 font-medium">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                    </svg>
+                    Read on Medium
+                  </div>
+                ) : postWithExtras.externalLink && (
+                  <a
+                    href={postWithExtras.externalLink as string}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="inline-flex items-center gap-1 text-xs text-sky-600 hover:text-sky-700 font-medium"
+                    onclick="event.stopPropagation()"
+                  >
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                    </svg>
+                    Original Article
+                  </a>
                 )}
               </div>
-              {post.externalLink && (
-                <a
-                  href={post.externalLink}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="inline-flex items-center gap-1 text-xs text-sky-600 hover:text-sky-700 font-medium"
-                  onclick="event.stopPropagation()"
-                >
-                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                  </svg>
-                  Original Article
-                </a>
-              )}
-            </div>
-          </a>
-        ))}
+            </a>
+          );
+        })}
       </div>
     )}
   </div>

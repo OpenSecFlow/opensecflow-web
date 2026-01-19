@@ -18,7 +18,15 @@ const videos = defineCollection({
   }),
 });
 
+const tutorials = defineCollection({
+  type: 'content',
+  schema: z.object({
+    // No frontmatter required - metadata parsed from content
+  }),
+});
+
 export const collections = {
   videos,
+  tutorials,
 };
 
