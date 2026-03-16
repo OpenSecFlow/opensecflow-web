@@ -193,41 +193,43 @@ const collectionPageSchema = {
                     {post.description}
                   </p>
                 </div>
-                <div class="flex items-center justify-between text-sm text-slate-blue-500 mb-3 mt-auto">
-                  <time datetime={postDate.toISOString()}>
-                    {postDate.toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric',
-                    })}
-                  </time>
-                  {post.tags && Array.isArray(post.tags) && post.tags.length > 0 && (
-                    <span class="text-sky-500 font-medium">
-                      {post.tags[0]}
-                    </span>
+                <div class="mt-auto space-y-2">
+                  <div class="flex items-center justify-between text-sm text-slate-blue-500">
+                    <time datetime={postDate.toISOString()}>
+                      {postDate.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                      })}
+                    </time>
+                    {post.tags && Array.isArray(post.tags) && post.tags.length > 0 && (
+                      <span class="text-sky-500 font-medium">
+                        {post.tags[0]}
+                      </span>
+                    )}
+                  </div>
+                  {isExternalOnly ? (
+                    <div class="inline-flex items-center gap-1 text-xs text-sky-600 font-medium">
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                      </svg>
+                      Read on Medium
+                    </div>
+                  ) : postWithExtras.externalLink && (
+                    <a
+                      href={postWithExtras.externalLink as string}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      class="inline-flex items-center gap-1 text-xs text-sky-600 hover:text-sky-700 font-medium"
+                      onclick="event.stopPropagation()"
+                    >
+                      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
+                      </svg>
+                      Original Article
+                    </a>
                   )}
                 </div>
-                {isExternalOnly ? (
-                  <div class="inline-flex items-center gap-1 text-xs text-sky-600 font-medium">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                    </svg>
-                    Read on Medium
-                  </div>
-                ) : postWithExtras.externalLink && (
-                  <a
-                    href={postWithExtras.externalLink as string}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="inline-flex items-center gap-1 text-xs text-sky-600 hover:text-sky-700 font-medium"
-                    onclick="event.stopPropagation()"
-                  >
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"></path>
-                    </svg>
-                    Original Article
-                  </a>
-                )}
               </div>
             </a>
           );
