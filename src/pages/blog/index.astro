@@ -11,7 +11,8 @@ const externalArticles = [
   {
     slug: 'netdriver-the-new-netmiko-medium',
     title: 'NetDriver, the New Netmiko: A Modern Approach to Network Automation',
-    description: 'Discover how NetDriver revolutionizes network automation with REST API, persistent sessions, command queuing, and async architecture - addressing Netmiko\'s limitations while building on its strengths.',
+    description:
+      "Discover how NetDriver revolutionizes network automation with REST API, persistent sessions, command queuing, and async architecture - addressing Netmiko's limitations while building on its strengths.",
     pubDate: new Date('2025-11-06'),
     updatedDate: null,
     heroImage: null,
@@ -19,6 +20,46 @@ const externalArticles = [
     body: '',
     externalLink: 'https://medium.com/@skycloudinet/netdriver-the-new-netmiko-bbbad90302db',
     isExternalOnly: true, // Flag to indicate this links directly to external source
+  },
+  {
+    slug: 'potential-challenges-and-pitfalls-of-network-automation',
+    title: 'Potential Challenges and Pitfalls of Network Automation',
+    description:
+      'Network automation is fraught with challenges, including the complexity of legacy systems, security and compliance issues, scalability obstacles, and a lack of standardization. Legacy systems often resist integration with modern automation, requiring custom scripts and resources to manage inconsistencies.',
+    pubDate: new Date('2025-01-15'),
+    updatedDate: null,
+    heroImage: null,
+    tags: ['network-automation', 'automation-challenges', 'legacy-systems', 'security'],
+    body: '',
+    externalLink:
+      'https://medium.com/@mark_27275/potential-challenges-and-pitfalls-of-network-automation-d02c43ad66eb',
+    isExternalOnly: true,
+  },
+  {
+    slug: 'network-automation-overview',
+    title: 'Network automation',
+    description:
+      "You know what's interesting about managing all these different systems? Network automation really handles the heavy lifting when you've got multiple pieces that need to work together. It's all about taking those complicated, multi-step processes — the kind that need several systems and devices playing nice with each other — and making them run automatically.",
+    pubDate: new Date('2025-01-10'),
+    updatedDate: null,
+    heroImage: null,
+    tags: ['network-automation', 'orchestration', 'operations'],
+    body: '',
+    externalLink: 'https://medium.com/@mark_27275/network-automation-7b98577c1f58',
+    isExternalOnly: true,
+  },
+  {
+    slug: 'what-is-network-automation',
+    title: 'What Is Network Automation?',
+    description:
+      "You know how managing networks can feel like a constant juggling act? Well, network automation steps in to change that game completely. It's essentially about using clever software and specialized tools to take control of your network devices and infrastructure without all the manual headaches.",
+    pubDate: new Date('2025-01-05'),
+    updatedDate: null,
+    heroImage: null,
+    tags: ['network-automation', 'networking-basics', 'infrastructure'],
+    body: '',
+    externalLink: 'https://medium.com/@mark_27275/what-is-network-automation-c6fec189cf0f',
+    isExternalOnly: true,
   },
 ];
 
@@ -129,7 +170,7 @@ const collectionPageSchema = {
               href={cardHref}
               target={isExternalOnly ? '_blank' : undefined}
               rel={isExternalOnly ? 'noopener noreferrer' : undefined}
-              class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border-2 border-slate-blue-200 hover:border-sky-400 transform hover:-translate-y-1 group"
+              class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 border-2 border-slate-blue-200 hover:border-sky-400 transform hover:-translate-y-1 group h-full flex flex-col"
             >
               {post.heroImage && (
                 <div class="aspect-video bg-slate-blue-100 overflow-hidden">
@@ -143,14 +184,16 @@ const collectionPageSchema = {
                   />
                 </div>
               )}
-              <div class="p-6">
-                <h2 class="text-xl font-semibold text-navy-800 mb-2 group-hover:text-sky-500 transition-colors">
-                  {post.title}
-                </h2>
-                <p class="text-slate-blue-600 text-sm mb-4 line-clamp-2">
-                  {post.description}
-                </p>
-                <div class="flex items-center justify-between text-sm text-slate-blue-500 mb-3">
+              <div class="p-6 flex flex-col flex-1 min-h-0">
+                <div class="flex-1 min-h-0">
+                  <h2 class="text-xl font-semibold text-navy-800 mb-2 group-hover:text-sky-500 transition-colors">
+                    {post.title}
+                  </h2>
+                  <p class="text-slate-blue-600 text-sm mb-4 line-clamp-2">
+                    {post.description}
+                  </p>
+                </div>
+                <div class="flex items-center justify-between text-sm text-slate-blue-500 mb-3 mt-auto">
                   <time datetime={postDate.toISOString()}>
                     {postDate.toLocaleDateString('en-US', {
                       year: 'numeric',
