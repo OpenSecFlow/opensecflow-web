@@ -2,7 +2,6 @@
 title: "NetDriver, the New Netmiko: A Modern Approach to Network Automation"
 description: "Discover how NetDriver revolutionizes network automation with REST API, persistent sessions, command queuing, and async architecture - addressing Netmiko's limitations while building on its strengths."
 pubDate: 2025-11-06
-updatedDate: 2025-11-06
 tags: ['netdriver', 'netmiko', 'network-automation', 'ssh', 'rest-api', 'asyncssh', 'scaling-automation']
 externalLink: https://medium.com/@skycloudinet/netdriver-the-new-netmiko-bbbad90302db
 ---
