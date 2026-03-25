@@ -1,14 +1,12 @@
 ---
-import { db, BlogPosts } from 'astro:db';
-import { eq } from 'astro:db';
+import { getCollection, type CollectionEntry } from 'astro:content';
 import MainLayout from '../../layouts/MainLayout.astro';
 import SchemaLD from '../../components/SchemaLD.astro';
 import BreadcrumbList from '../../components/schemas/BreadcrumbList.astro';
 import RelatedContent from '../../components/RelatedContent.astro';
-import { marked } from 'marked';
 
 export async function getStaticPaths() {
-  const blogPosts = await db.select().from(BlogPosts);
+  const blogPosts = await getCollection('blog');
   return blogPosts.map((post) => ({
     params: { slug: post.slug },
     props: { post },
@@ -16,17 +14,19 @@ export async function getStaticPaths() {
 }
 
 interface Props {
-  post: typeof BlogPosts.$inferSelect;
+  post: CollectionEntry<'blog'>;
 }
 
 const { post } = Astro.props;
-const htmlContent = marked.parse(post.body);
+const { Content } = await post.render();
+const postSlug = post.slug;
+const postData = post.data;
 
-const siteURL = Astro.site || 'https://opensecflow.io';
-const articleURL = new URL(`/blog/${post.slug}`, siteURL).toString();
+const siteURL = Astro.site?.toString() ?? 'https://opensecflow.io';
+const articleURL = new URL(`/blog/${postSlug}`, siteURL).toString();
 
 // Extract keywords from tags for about/mentions
-const keywords = post.tags && Array.isArray(post.tags) ? post.tags : [];
+const keywords = postData.tags && Array.isArray(postData.tags) ? postData.tags : [];
 const aboutKeywords = keywords.filter(tag => 
   ['ssh', 'rest-api', 'network-engineering', 'automation', 'netdriver', 
    'asyncssh', 'cli', 'rest', 'api', 'network', 'testing', 'simulation'].includes(tag.toLowerCase())
@@ -46,17 +46,17 @@ const articleSection = keywords.find(tag =>
 const breadcrumbItems = [
   { name: 'Home', url: '/' },
   { name: 'Blog', url: '/blog' },
-  { name: post.title, url: `/blog/${post.slug}` },
+  { name: postData.title, url: `/blog/${postSlug}` },
 ];
 
 // Enhanced TechArticle Schema
 const techArticleSchema = {
   '@context': 'https://schema.org',
   '@type': 'TechArticle',
-  headline: post.title,
-  description: post.description,
-  datePublished: post.pubDate.toISOString(),
-  dateModified: post.updatedDate ? post.updatedDate.toISOString() : post.pubDate.toISOString(),
+  headline: postData.title,
+  description: postData.description,
+  datePublished: postData.pubDate.toISOString(),
+  dateModified: postData.updatedDate ? postData.updatedDate.toISOString() : postData.pubDate.toISOString(),
   author: {
     '@type': 'Person',
     name: 'OpenSecFlow',
@@ -88,32 +88,32 @@ const techArticleSchema = {
     '@type': 'Thing',
     name: keyword,
   })),
-  ...(post.heroImage && {
+  ...(postData.heroImage && {
     image: {
       '@type': 'ImageObject',
-      url: new URL(post.heroImage, siteURL).toString(),
-      caption: post.title,
+      url: new URL(postData.heroImage, siteURL).toString(),
+      caption: postData.title,
     },
   }),
 };
 ---
 
 <MainLayout
-  title={`${post.title} - OpenSecFlow Blog`}
-  description={post.description}
-  canonicalURL={Astro.url}
+  title={`${postData.title} - OpenSecFlow Blog`}
+  description={postData.description}
+  canonicalURL={Astro.url.toString()}
   ogType="article"
-  ogImage={post.heroImage || undefined}
-  ogImageAlt={post.title}
+  ogImage={postData.heroImage || undefined}
+  ogImageAlt={postData.title}
   articleAuthor="OpenSecFlow"
-  articlePublishedTime={post.pubDate}
-  articleModifiedTime={post.updatedDate || post.pubDate}
+  articlePublishedTime={postData.pubDate}
+  articleModifiedTime={postData.updatedDate || postData.pubDate}
   articleSection={articleSection}
   articleTags={keywords}
   keywords={keywords}
   authorName="OpenSecFlow"
 >
-  <BreadcrumbList items={breadcrumbItems} siteURL={siteURL} />
+  <BreadcrumbList items={breadcrumbItems} siteURL={String(siteURL)} />
   <SchemaLD schema={techArticleSchema} />
   
   <!-- Animated Background -->
@@ -153,43 +153,10 @@ const techArticleSchema = {
 
   <article class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
     <header class="mb-8">
-      <h1 class="text-4xl font-bold text-navy-800 mb-4">
-        {post.title}
-      </h1>
-      <p class="text-xl text-slate-blue-600 mb-6">
-        {post.description}
-      </p>
-      <div class="flex flex-wrap items-center gap-4 text-sm text-slate-blue-500">
-        <time datetime={post.pubDate.toISOString()}>
-          Published: {post.pubDate.toLocaleDateString('en-US', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric',
-          })}
-        </time>
-        {post.updatedDate && (
-          <time datetime={post.updatedDate.toISOString()}>
-            Updated: {post.updatedDate.toLocaleDateString('en-US', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric',
-            })}
-          </time>
-        )}
-        {post.tags && Array.isArray(post.tags) && post.tags.length > 0 && (
-          <div class="flex flex-wrap gap-2">
-            {post.tags.map((tag) => (
-              <span class="px-2 py-1 bg-sky-100 text-sky-700 rounded text-xs font-medium">
-                {tag}
-              </span>
-            ))}
-          </div>
-        )}
-      </div>
-      {post.externalLink && (
-        <div class="mt-4">
+      {postData.externalLink && (
+        <div>
           <a
-            href={post.externalLink}
+            href={postData.externalLink}
             target="_blank"
             rel="noopener noreferrer"
             class="inline-flex items-center gap-2 px-4 py-2 bg-sky-600 text-white rounded-lg hover:bg-sky-700 transition-colors font-medium"
@@ -203,11 +170,11 @@ const techArticleSchema = {
       )}
     </header>
 
-    {post.heroImage && (
+    {postData.heroImage && (
       <div class="mb-8 rounded-xl overflow-hidden border-2 border-slate-blue-200">
         <img
-          src={post.heroImage}
-          alt={post.title}
+          src={postData.heroImage}
+          alt={postData.title}
           class="w-full h-auto"
           loading="lazy"
           width="800"
@@ -216,11 +183,13 @@ const techArticleSchema = {
       </div>
     )}
 
-    <div class="prose prose-lg prose-navy max-w-none" set:html={htmlContent} />
+    <div class="prose prose-lg prose-navy max-w-none">
+      <Content />
+    </div>
     
     <RelatedContent 
-      currentSlug={post.slug}
-      currentTags={post.tags && Array.isArray(post.tags) ? post.tags : []}
+      currentSlug={postSlug}
+      currentTags={postData.tags && Array.isArray(postData.tags) ? postData.tags : []}
     />
   </article>
 </MainLayout>
